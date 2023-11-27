@@ -9,7 +9,7 @@ require("dotenv").config();
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174", "https://job-hunter-188ab.web.app", "https://job-hunter-188ab.firebaseapp.com"],
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   })
 );
@@ -52,6 +52,7 @@ async function run() {
 
     //collections Names
     const userCollection = client.db("DiagnosticDB").collection("users");
+    const testCollection = client.db("DiagnosticDB").collection("tests");
 
     //use verify Admin after verify Token
     const verifyAdmin = async (req, res, next) => {
@@ -74,7 +75,8 @@ async function run() {
 
     //users related api
 
-    app.get("/api/v1/users/admin/:email", verifyToken, async (req, res) => {
+    //check user is Admin or Not
+    app.get("/users/admin/:email", verifyToken, async (req, res) => {
       const email = req.params.email;
       if (email !== req.decoded.email) {
         return res.status(403).send({ message: "unauthorized access" });
@@ -89,10 +91,22 @@ async function run() {
     });
 
     //get all the user
-    app.get("/api/v1/users", verifyToken, async (req, res) => {
+    app.get("/users", verifyToken, async (req, res) => {
       // console.log(req.headers);
       const result = await userCollection.find().toArray();
       res.send(result);
+    });
+
+    //gat a specific user info
+    app.get("/user/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await userCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
     });
 
     //post users
@@ -121,11 +135,44 @@ async function run() {
       res.send(result);
     });
 
+    //toggle user status
+    app.patch("/user/toggle/:id/:status", async (req, res) => {
+      const id = req.params.id;
+      const status = req.params.status;
+      console.log(status);
+      const filter = { _id: new ObjectId(id) };
+
+      if (status === "Active") {
+        status === "Block";
+        console.log("after check", status);
+      } else {
+        status === "Active";
+        console.log("after block check", status);
+      }
+
+      
+
+      const updatedDoc = {};
+      // const result = await userCollection.updateOne(filter);
+      // res.send(result);
+    });
+
     //delete user
     app.delete("/users/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+
+    // ====================================== Test Related API ===========================================
+
+    //Add a test
+    app.post("/add/test", async (req, res) => {
+      const test = req.body;
+      const result = await testCollection.insertOne(test);
       res.send(result);
     });
 
