@@ -224,6 +224,20 @@ async function run() {
       res.send(result);
     });
 
+    //get all the banners
+    app.get("/banners", verifyToken, async (req, res) => {
+      const result = await bannerCollection.find().toArray();
+      res.send(result);
+    });
+
+    //delete banner
+    app.delete("/banner/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bannerCollection.deleteOne(query);
+      res.send(result);
+    });
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
