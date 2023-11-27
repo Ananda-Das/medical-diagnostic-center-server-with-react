@@ -150,8 +150,6 @@ async function run() {
         console.log("after block check", status);
       }
 
-      
-
       const updatedDoc = {};
       // const result = await userCollection.updateOne(filter);
       // res.send(result);
@@ -165,14 +163,54 @@ async function run() {
       res.send(result);
     });
 
-
-
     // ====================================== Test Related API ===========================================
 
     //Add a test
-    app.post("/add/test", async (req, res) => {
+    app.post("/add/test", verifyToken, async (req, res) => {
       const test = req.body;
       const result = await testCollection.insertOne(test);
+      res.send(result);
+    });
+
+    //get all the tests
+    app.get("/tests", verifyToken, async (req, res) => {
+      const result = await testCollection.find().toArray();
+      res.send(result);
+    });
+
+    //get a specific test
+    app.get("/test/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await testCollection.findOne(query);
+      res.send(result);
+    });
+
+    //update a test
+    app.patch("/test/:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          name: item.name,
+          date: item.date,
+          details: item.details,
+          price: item.price,
+          slot: item.slot,
+          imageUrl: item.imageUrl,
+        },
+      };
+
+      const result = await testCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+    //delete test
+    app.delete("/test/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await testCollection.deleteOne(query);
       res.send(result);
     });
 
