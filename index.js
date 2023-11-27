@@ -53,6 +53,7 @@ async function run() {
     //collections Names
     const userCollection = client.db("DiagnosticDB").collection("users");
     const testCollection = client.db("DiagnosticDB").collection("tests");
+    const bannerCollection = client.db("DiagnosticDB").collection("banners");
 
     //use verify Admin after verify Token
     const verifyAdmin = async (req, res, next) => {
@@ -211,6 +212,15 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await testCollection.deleteOne(query);
+      res.send(result);
+    });
+
+
+    // ====================================== Banner Related API ===========================================
+    //Add a banner
+    app.post("/add/banner", async (req, res) => {
+      const banner = req.body;
+      const result = await bannerCollection.insertOne(banner);
       res.send(result);
     });
 
