@@ -54,6 +54,7 @@ async function run() {
     const userCollection = client.db("DiagnosticDB").collection("users");
     const testCollection = client.db("DiagnosticDB").collection("tests");
     const bannerCollection = client.db("DiagnosticDB").collection("banners");
+    const bookingCollection = client.db("DiagnosticDB").collection("bookings");
 
     //use verify Admin after verify Token
     const verifyAdmin = async (req, res, next) => {
@@ -174,7 +175,11 @@ async function run() {
     });
 
     //get all the tests
-    app.get("/tests", verifyToken, async (req, res) => {
+    // app.get("/tests", verifyToken, async (req, res) => {
+    //   const result = await testCollection.find().toArray();
+    //   res.send(result);
+    // });
+    app.get("/tests", async (req, res) => {
       const result = await testCollection.find().toArray();
       res.send(result);
     });
@@ -237,6 +242,39 @@ async function run() {
       const result = await bannerCollection.deleteOne(query);
       res.send(result);
     });
+
+    //get all a specific banner
+    app.get("/banners/:discount", verifyToken, async (req, res) => {
+      const result = await bannerCollection.findOne({couponCodeName:req.params.discount});
+      res.send(result);
+
+    });
+
+
+    // ====================================== Guest User Related API ===========================================
+
+    //get a specific user
+    app.get("/user/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await testCollection.findOne(query);
+      console.log(result);
+      // res.send(result);
+    });
+    app.get("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      console.log(email);
+      const query = { email: email };
+      const result = await testCollection.findOne(query);
+      console.log(result);
+      // res.send(result);
+    });
+
+    // ====================================== Booking Related API ===========================================
+
+
+
+
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
