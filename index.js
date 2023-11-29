@@ -55,6 +55,7 @@ async function run() {
     const testCollection = client.db("DiagnosticDB").collection("tests");
     const bannerCollection = client.db("DiagnosticDB").collection("banners");
     const bookingCollection = client.db("DiagnosticDB").collection("bookings");
+    const paymentCollection = client.db("DiagnosticDB").collection("payments");
 
     //use verify Admin after verify Token
     const verifyAdmin = async (req, res, next) => {
@@ -99,8 +100,26 @@ async function run() {
       res.send(result);
     });
 
+    //get a user info
+    app.get("/user/:email", verifyToken, async (req, res) => {
+      const result = await userCollection.findOne({ email: req.params.email });
+      res.send(result);
+    });
+
     //gat a specific user info
     app.get("/user/:id", async (req, res) => {
+      try {
+        const id = req.params.id;
+        const query = { _id: new ObjectId(id) };
+        const result = await userCollection.findOne(query);
+        res.send(result);
+      } catch (error) {
+        res.send({ message: error.message });
+      }
+    });
+
+    //gat a single user info
+    app.get("/singleUser/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
@@ -212,8 +231,6 @@ async function run() {
       res.send(result);
     });
 
-    
-
     //delete test
     app.delete("/test/:id", async (req, res) => {
       const id = req.params.id;
@@ -231,7 +248,7 @@ async function run() {
     });
 
     //get all the banners
-    app.get("/banners", verifyToken, async (req, res) => {
+    app.get("/banners", async (req, res) => {
       const result = await bannerCollection.find().toArray();
       res.send(result);
     });
@@ -249,6 +266,7 @@ async function run() {
       const result = await bannerCollection.findOne({ couponCodeName: req.params.discount });
       res.send(result);
     });
+
     // Update isActive status
     app.patch("/banners/:id", async (req, res) => {
       const bannerId = req.params.id;
@@ -291,7 +309,6 @@ async function run() {
       console.log(email);
       const query = { email: email };
       const result = await userCollection.findOne(query);
-      // console.log(result);
       res.send(result);
     });
 
@@ -344,15 +361,8 @@ async function run() {
 
       //  carefully delete each item from the cart
       console.log("payment info", payment);
-      const query = {
-        _id: {
-          $in: payment.cartIds.map((id) => new ObjectId(id)),
-        },
-      };
 
-      const deleteResult = await cartCollection.deleteMany(query);
-
-      res.send({ paymentResult, deleteResult });
+      res.send({ paymentResult });
     });
 
     // Send a ping to confirm a successful connection
