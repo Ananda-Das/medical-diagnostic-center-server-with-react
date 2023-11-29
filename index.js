@@ -359,10 +359,79 @@ async function run() {
       const payment = req.body;
       const paymentResult = await paymentCollection.insertOne(payment);
 
-      //  carefully delete each item from the cart
       console.log("payment info", payment);
 
       res.send({ paymentResult });
+    });
+
+    //update the test slot after payments
+    app.patch("/updateTest/:id", async (req, res) => {
+      const testId = req.params.id;
+
+      try {
+        const filter = { _id: new ObjectId(testId) };
+        const banner = await testCollection.findOne(filter);
+
+        const updatedDoc = {
+          $set: {
+            slot: -1,
+          },
+        };
+
+        const result = await testCollection.updateOne(filter, updatedDoc);
+
+        res.json({ message: "Test updated successfully", result });
+      } catch (error) {
+        console.error("Error updating Test:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
+
+    //get all payments
+    app.get("/payments", async (req, res) => {
+      const result = await paymentCollection.find().toArray();
+      res.send(result);
+    });
+
+    // ====================================== MY Bookings Related API ===========================================
+    //get specifice a user Booked Test
+    app.get("/my/booked/test", verifyToken, async (req, res) => {
+      // console.log('applied', req.user);
+      // if (req.query.email !== req.user.email) {
+      //   return res.status(403).send({ message: "Forbiden Access" });
+      // }
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
+
+    app.get("/my/booked/test/details", async (req, res) => {
+      // const bookedUser = await paymentCollection.findOne({email: req.params.email});
+      const result = await paymentCollection 
+        .aggregate([
+          {
+            $addFields : {
+              testId: {
+                $toObjectId: '$testId'
+              }
+            }
+          },
+          {
+            $lookup: {
+              from: 'tests',
+            localField: 'testId',
+            foreignField: '_id',
+            as: 'testDetails'
+            },
+          },
+        ])
+        .toArray();
+
+      res.send(result);
     });
 
     // Send a ping to confirm a successful connection
