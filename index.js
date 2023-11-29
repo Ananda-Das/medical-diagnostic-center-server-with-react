@@ -212,6 +212,8 @@ async function run() {
       res.send(result);
     });
 
+    
+
     //delete test
     app.delete("/test/:id", async (req, res) => {
       const id = req.params.id;
@@ -277,20 +279,20 @@ async function run() {
     // ====================================== Guest User Related API ===========================================
 
     //get a specific user
-    app.get("/user/:id", async (req, res) => {
-      const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await testCollection.findOne(query);
-      console.log(result);
-      // res.send(result);
-    });
-    app.get("/user/:email", async (req, res) => {
+    // app.get("/user/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = await userCollection.findOne(query);
+    //   console.log(result);
+    //   // res.send(result);
+    // });
+    app.get("/users/:email", async (req, res) => {
       const email = req.params.email;
       console.log(email);
       const query = { email: email };
-      const result = await testCollection.findOne(query);
-      console.log(result);
-      // res.send(result);
+      const result = await userCollection.findOne(query);
+      // console.log(result);
+      res.send(result);
     });
 
     // ====================================== Booking Related API ===========================================
@@ -298,6 +300,14 @@ async function run() {
     app.post("/add/booking", async (req, res) => {
       const banner = req.body;
       const result = await bookingCollection.insertOne(banner);
+      res.send(result);
+    });
+
+    //get bookings for a specific test
+    app.get("/bookedTest/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await bookingCollection.find(query);
       res.send(result);
     });
 
