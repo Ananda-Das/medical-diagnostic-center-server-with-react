@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const cors = require("cors");
 require("dotenv").config();
 
-// const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 app.use(
   cors({
@@ -220,7 +220,6 @@ async function run() {
       res.send(result);
     });
 
-
     // ====================================== Banner Related API ===========================================
     //Add a banner
     app.post("/add/banner", async (req, res) => {
@@ -245,11 +244,35 @@ async function run() {
 
     //get all a specific banner
     app.get("/banners/:discount", verifyToken, async (req, res) => {
-      const result = await bannerCollection.findOne({couponCodeName:req.params.discount});
+      const result = await bannerCollection.findOne({ couponCodeName: req.params.discount });
       res.send(result);
-
     });
+    // Update isActive status
+    app.patch("/banners/:id", async (req, res) => {
+      const bannerId = req.params.id;
 
+      try {
+        const filter = { _id: new ObjectId(bannerId) };
+        const banner = await bannerCollection.findOne(filter);
+
+        if (!banner) {
+          return res.status(404).json({ error: "Banner not found" });
+        }
+
+        const updatedDoc = {
+          $set: {
+            isActive: !banner.isActive,
+          },
+        };
+
+        const result = await bannerCollection.updateOne(filter, updatedDoc);
+
+        res.json({ message: "Banner updated successfully", result });
+      } catch (error) {
+        console.error("Error updating banner:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
+    });
 
     // ====================================== Guest User Related API ===========================================
 
@@ -271,10 +294,56 @@ async function run() {
     });
 
     // ====================================== Booking Related API ===========================================
+    //Add a booking
+    app.post("/add/booking", async (req, res) => {
+      const banner = req.body;
+      const result = await bookingCollection.insertOne(banner);
+      res.send(result);
+    });
 
+    // ====================================== Payment Related API ===========================================
+    // payment intent
+    app.post("/create-payment-intent", async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(amount, "amount inside the intent");
 
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
 
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
 
+    app.get("/payments/:email", verifyToken, async (req, res) => {
+      const query = { email: req.params.email };
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/payments", async (req, res) => {
+      const payment = req.body;
+      const paymentResult = await paymentCollection.insertOne(payment);
+
+      //  carefully delete each item from the cart
+      console.log("payment info", payment);
+      const query = {
+        _id: {
+          $in: payment.cartIds.map((id) => new ObjectId(id)),
+        },
+      };
+
+      const deleteResult = await cartCollection.deleteMany(query);
+
+      res.send({ paymentResult, deleteResult });
+    });
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
