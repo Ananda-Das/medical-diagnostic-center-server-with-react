@@ -106,6 +106,12 @@ async function run() {
       res.send(result);
     });
 
+    //get a user info
+    app.get("/banners/:email", verifyToken, async (req, res) => {
+      const result = await bannerCollection.findOne({ isActive: req.params.isActive });
+      res.send(result);
+    });
+
     //gat a specific user info
     app.get("/user/:id", async (req, res) => {
       try {
@@ -294,6 +300,12 @@ async function run() {
       }
     });
 
+    //get all a specific banner
+    app.get("/banners/:isActive", async (req, res) => {
+      const result = await bannerCollection.findOne({ isActive: req.params.isActive });
+      res.send(result);
+    });
+
     // ====================================== Guest User Related API ===========================================
 
     //get a specific user
@@ -392,6 +404,40 @@ async function run() {
       const result = await paymentCollection.find().toArray();
       res.send(result);
     });
+
+    //delete payments
+    app.delete("/payments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    //get a specific payments
+    app.get("/single/payments/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentCollection.findOne(query);
+      res.send(result);
+    });
+
+    //update a payments
+    app.patch("/payments/:id", async (req, res) => {
+      const item = req.body;
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          status: item.status,
+          testLink: item.testLink,
+        },
+      };
+
+      const result = await paymentCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    });
+
+
 
     // ====================================== MY Bookings Related API ===========================================
     //get specifice a user Booked Test
