@@ -97,7 +97,7 @@ async function run() {
     });
 
     //get a user info
-    app.get("/user/:email", verifyToken,  async (req, res) => {
+    app.get("/user/:email", verifyToken, async (req, res) => {
       const result = await userCollection.findOne({ email: req.params.email });
       res.send(result);
     });
@@ -109,7 +109,7 @@ async function run() {
     });
 
     //gat a specific user info
-    app.get("/single/user/:id",  async (req, res) => {
+    app.get("/single/user/:id", async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
@@ -184,6 +184,33 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await userCollection.deleteOne(query);
       res.send(result);
+    });
+
+    // Update user status
+    app.patch("/change/user/:id", async (req, res) => {
+      const userId = req.params.id;
+
+      try {
+        const filter = { _id: new ObjectId(userId) };
+        const user = await userCollection.findOne(filter);
+
+        if (!user) {
+          return res.status(404).json({ error: "Banner not found" });
+        }
+
+        const updatedDoc = {
+          $set: {
+            status: !user.status,
+          },
+        };
+
+        const result = await userCollection.updateOne(filter, updatedDoc);
+
+        res.json({ message: "Banner updated successfully", result });
+      } catch (error) {
+        console.error("Error updating banner:", error);
+        res.status(500).json({ error: "Internal Server Error" });
+      }
     });
 
     // ====================================== Test Related API ===========================================
