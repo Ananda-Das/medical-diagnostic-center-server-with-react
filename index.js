@@ -7,12 +7,7 @@ require("dotenv").config();
 
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-app.use(
-  cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
-    credentials: true,
-  })
-);
+app.use(cors());
 app.use(express.json());
 
 //middlewares
@@ -48,7 +43,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
 
     //collections Names
     const userCollection = client.db("DiagnosticDB").collection("users");
@@ -102,19 +97,19 @@ async function run() {
     });
 
     //get a user info
-    app.get("/user/:email", verifyToken, async (req, res) => {
+    app.get("/user/:email", verifyToken,  async (req, res) => {
       const result = await userCollection.findOne({ email: req.params.email });
       res.send(result);
     });
 
-    //get a user info
+    //get a banner info
     app.get("/banners/:email", verifyToken, async (req, res) => {
       const result = await bannerCollection.findOne({ isActive: req.params.isActive });
       res.send(result);
     });
 
     //gat a specific user info
-    app.get("/user/:id", async (req, res) => {
+    app.get("/single/user/:id",  async (req, res) => {
       try {
         const id = req.params.id;
         const query = { _id: new ObjectId(id) };
@@ -438,8 +433,6 @@ async function run() {
       res.send(result);
     });
 
-
-
     // ====================================== MY Bookings Related API ===========================================
     //get specifice a user Booked Test
     app.get("/my/booked/test", verifyToken, async (req, res) => {
@@ -455,24 +448,23 @@ async function run() {
       res.send(result);
     });
 
-
     app.get("/my/booked/test/details", async (req, res) => {
       // const bookedUser = await paymentCollection.findOne({email: req.params.email});
-      const result = await paymentCollection 
+      const result = await paymentCollection
         .aggregate([
           {
-            $addFields : {
+            $addFields: {
               testId: {
-                $toObjectId: '$testId'
-              }
-            }
+                $toObjectId: "$testId",
+              },
+            },
           },
           {
             $lookup: {
-              from: 'tests',
-            localField: 'testId',
-            foreignField: '_id',
-            as: 'testDetails'
+              from: "tests",
+              localField: "testId",
+              foreignField: "_id",
+              as: "testDetails",
             },
           },
         ])
@@ -481,7 +473,6 @@ async function run() {
       res.send(result);
     });
 
-
     //get all recomendation
     app.get("/recomendations", async (req, res) => {
       const result = await recomendationCollection.find().toArray();
@@ -489,8 +480,8 @@ async function run() {
     });
 
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    // await client.db("admin").command({ ping: 1 });
+    // console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
@@ -499,7 +490,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.send("Bistro Boss Running!");
+  res.send("Medicare is Running!");
 });
 
 app.listen(port, () => {
