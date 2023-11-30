@@ -56,6 +56,7 @@ async function run() {
     const bannerCollection = client.db("DiagnosticDB").collection("banners");
     const bookingCollection = client.db("DiagnosticDB").collection("bookings");
     const paymentCollection = client.db("DiagnosticDB").collection("payments");
+    const recomendationCollection = client.db("DiagnosticDB").collection("recomendations");
 
     //use verify Admin after verify Token
     const verifyAdmin = async (req, res, next) => {
@@ -477,6 +478,13 @@ async function run() {
         ])
         .toArray();
 
+      res.send(result);
+    });
+
+
+    //get all recomendation
+    app.get("/recomendations", async (req, res) => {
+      const result = await recomendationCollection.find().toArray();
       res.send(result);
     });
 
